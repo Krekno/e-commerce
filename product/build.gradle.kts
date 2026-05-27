@@ -36,6 +36,7 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka")
     // Search (optional but recommended for a marketplace)
     implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
+    implementation("org.springframework.cloud:spring-cloud-starter-config")
 }
 
 tasks.withType<Test> {

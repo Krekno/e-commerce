@@ -34,6 +34,7 @@ dependencies {
     implementation("com.iyzipay:iyzipay-java:2.0.141")
     // Kafka — consume OrderPlaced, publish PaymentSucceeded / PaymentFailed
     implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.cloud:spring-cloud-starter-config")
 }
 
 tasks.withType<Test> {

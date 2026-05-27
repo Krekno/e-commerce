@@ -33,7 +33,7 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 	implementation("io.micrometer:micrometer-tracing-bridge-brave")
 	implementation("io.zipkin.reporter2:zipkin-reporter-brave")
-
+	implementation("org.springframework.cloud:spring-cloud-starter-config")
 }
 
 tasks.withType<Test> {

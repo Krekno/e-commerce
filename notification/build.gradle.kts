@@ -32,6 +32,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     // Kafka — consume OrderPlaced, PaymentSucceeded, UserRegistered
     implementation("org.springframework.kafka:spring-kafka")
+    // Config
+    implementation("org.springframework.cloud:spring-cloud-starter-config")
 }
 
 tasks.withType<Test> {

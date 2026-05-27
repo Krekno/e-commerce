@@ -1,0 +1,102 @@
+# =========================
+# OS FILES
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE FILES
+# =========================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# =========================
+# JAVA / GRADLE
+# =========================
+
+# Gradle
+.gradle/
+build/
+
+# Maven
+target/
+
+# Compiled class files
+*.class
+
+# Logs
+*.log
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# =========================
+# SPRING BOOT
+# =========================
+
+# Application secrets
+application-local.yml
+application-local.yaml
+application-prod.yml
+application-prod.yaml
+.env
+
+# =========================
+# DOCKER
+# =========================
+
+# Docker override files
+docker-compose.override.yml
+
+# Docker volumes
+volumes/
+data/
+
+# =========================
+# KAFKA / ZOOKEEPER
+# =========================
+
+kafka-logs/
+zookeeper/
+tmp/
+
+# =========================
+# NODE / FRONTEND
+# =========================
+
+node_modules/
+dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# TESTING
+# =========================
+
+/test-output/
+/reports/
+
+# =========================
+# MISC
+# =========================
+
+*.swp
+*.swo
+*~
