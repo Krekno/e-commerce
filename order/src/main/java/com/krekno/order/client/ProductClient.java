@@ -10,6 +10,6 @@ import java.util.UUID;
 @FeignClient(name = "products")
 public interface ProductClient {
 
-    @PostMapping("/api/v1/products/{id}/reduce-stock")
+    @PostMapping("/api/products/{id}/reduce-stock")
     boolean reduceStock(@PathVariable("id") UUID id, @RequestParam("quantity") int quantity);
 }
