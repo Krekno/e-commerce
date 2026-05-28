@@ -43,11 +43,11 @@ public class User {
 
     private UserRole role;
 
-    @Column(name = "store_name")
-    private String storeName;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Seller sellerProfile;
 
-    @Column(name = "store_description")
-    private String storeDescription;
+    @Column(name = "profile_picture")
+    private String profilePicture;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

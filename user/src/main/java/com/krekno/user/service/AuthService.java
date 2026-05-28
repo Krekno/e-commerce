@@ -1,9 +1,15 @@
 package com.krekno.user.service;
 
+import com.iyzipay.Options;
+import com.iyzipay.model.Currency;
+import com.iyzipay.model.Locale;
+import com.iyzipay.model.SubMerchant;
+import com.iyzipay.request.CreateSubMerchantRequest;
 import com.krekno.user.dto.LoginRequest;
 import com.krekno.user.dto.SellerSignupRequest;
 import com.krekno.user.dto.SignupRequest;
 import com.krekno.user.entity.RefreshToken;
+import com.krekno.user.entity.Seller;
 import com.krekno.user.entity.User;
 import com.krekno.user.enums.UserRole;
 import com.krekno.user.repository.UserRepository;
@@ -11,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -38,6 +45,23 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
 
+    @Value("${iyzico.api-key}")
+    private String apiKey;
+
+    @Value("${iyzico.secret-key}")
+    private String secretKey;
+
+    @Value("${iyzico.base-url}")
+    private String baseUrl;
+
+    private Options getOptions() {
+        Options options = new Options();
+        options.setApiKey(apiKey);
+        options.setSecretKey(secretKey);
+        options.setBaseUrl(baseUrl);
+        return options;
+    }
+
     public void registerUser(SignupRequest signupRequest) {
         if (userRepository.existsByEmail(signupRequest.email())) {
             throw new IllegalArgumentException("Email is already in use!");
@@ -48,6 +72,7 @@ public class AuthService {
                 .lastName(signupRequest.lastName())
                 .email(signupRequest.email())
                 .password(passwordEncoder.encode(signupRequest.password()))
+                .profilePicture(signupRequest.profilePicture())
                 .role(UserRole.USER)
                 .build();
 
@@ -64,10 +89,38 @@ public class AuthService {
                 .lastName(signupRequest.lastName())
                 .email(signupRequest.email())
                 .password(passwordEncoder.encode(signupRequest.password()))
+                .profilePicture(signupRequest.profilePicture())
                 .role(UserRole.SELLER)
+                .build();
+                
+        CreateSubMerchantRequest request = new CreateSubMerchantRequest();
+        request.setLocale(Locale.TR.getValue());
+        request.setConversationId(UUID.randomUUID().toString());
+        request.setSubMerchantExternalId(UUID.randomUUID().toString());
+        request.setSubMerchantType(signupRequest.companyType());
+        request.setAddress(signupRequest.address());
+        request.setContactName(signupRequest.firstName());
+        request.setContactSurname(signupRequest.lastName());
+        request.setEmail(signupRequest.email());
+        request.setGsmNumber(signupRequest.gsmNumber());
+        request.setIdentityNumber(signupRequest.identityNumber());
+        request.setIban(signupRequest.iban());
+        request.setCurrency(Currency.TRY.name());
+
+        SubMerchant subMerchant = SubMerchant.create(request, getOptions());
+
+        if (!"success".equalsIgnoreCase(subMerchant.getStatus())) {
+            throw new RuntimeException("Failed to register seller with Iyzico: " + subMerchant.getErrorMessage());
+        }
+                
+        Seller seller = Seller.builder()
                 .storeName(signupRequest.storeName())
                 .storeDescription(signupRequest.storeDescription())
+                .subMerchantKey(subMerchant.getSubMerchantKey())
+                .user(user)
                 .build();
+                
+        user.setSellerProfile(seller);
 
         userRepository.save(user);
     }
@@ -89,6 +142,9 @@ public class AuthService {
                 throw new IllegalArgumentException("Email is already in use!");
             }
             user.setEmail(updateRequest.email());
+        }
+        if (updateRequest.profilePicture() != null && !updateRequest.profilePicture().isEmpty() && !updateRequest.profilePicture().equals(user.getProfilePicture())) {
+            user.setProfilePicture(updateRequest.profilePicture());
         }
         if (updateRequest.password() != null && !updateRequest.password().isEmpty())
             user.setPassword(passwordEncoder.encode(updateRequest.password()));
@@ -171,9 +227,16 @@ public class AuthService {
         res.put("firstName", user.getFirstName());
         res.put("lastName", user.getLastName());
         res.put("email", user.getEmail());
+        res.put("profilePicture", user.getProfilePicture());
         res.put("createdAt", user.getCreatedAt());
         res.put("roles", userDetails.getAuthorities()
                 .stream().map(GrantedAuthority::getAuthority).toList());
+                
+        if (user.getSellerProfile() != null) {
+            res.put("storeName", user.getSellerProfile().getStoreName());
+            res.put("storeDescription", user.getSellerProfile().getStoreDescription());
+        }
+        
         return res;
     }
 }

@@ -3,3 +3,8 @@ spring:
     name: user
   config:
     import: optional:configserver:http://localhost:8888
+
+iyzico:
+  api-key: ${IYZICO_API_KEY}
+  secret-key: ${IYZICO_SECRET_KEY}
+  base-url: https://sandbox-api.iyzipay.com
