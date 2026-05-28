@@ -1,6 +1,7 @@
 package com.krekno.user.controller;
 
 import com.krekno.user.dto.LoginRequest;
+import com.krekno.user.dto.SellerSignupRequest;
 import com.krekno.user.dto.SignupRequest;
 import com.krekno.user.service.AuthService;
 import com.krekno.user.service.UserDetailsImpl;
@@ -25,6 +26,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody SignupRequest request) {
         authService.registerUser(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/register-seller")
+    public ResponseEntity<Void> registerSeller(@Valid @RequestBody SellerSignupRequest request) {
+        authService.registerSeller(request);
         return ResponseEntity.ok().build();
     }
 

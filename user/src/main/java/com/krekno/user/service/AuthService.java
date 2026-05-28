@@ -1,9 +1,11 @@
 package com.krekno.user.service;
 
 import com.krekno.user.dto.LoginRequest;
+import com.krekno.user.dto.SellerSignupRequest;
 import com.krekno.user.dto.SignupRequest;
 import com.krekno.user.entity.RefreshToken;
 import com.krekno.user.entity.User;
+import com.krekno.user.enums.UserRole;
 import com.krekno.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
@@ -41,8 +43,31 @@ public class AuthService {
             throw new IllegalArgumentException("Email is already in use!");
         }
 
+        User user = User.builder()
+                .firstName(signupRequest.firstName())
+                .lastName(signupRequest.lastName())
+                .email(signupRequest.email())
+                .password(passwordEncoder.encode(signupRequest.password()))
+                .role(UserRole.USER)
+                .build();
 
-        User user = User.builder().build();
+        userRepository.save(user);
+    }
+
+    public void registerSeller(SellerSignupRequest signupRequest) {
+        if (userRepository.existsByEmail(signupRequest.email())) {
+            throw new IllegalArgumentException("Email is already in use!");
+        }
+
+        User user = User.builder()
+                .firstName(signupRequest.firstName())
+                .lastName(signupRequest.lastName())
+                .email(signupRequest.email())
+                .password(passwordEncoder.encode(signupRequest.password()))
+                .role(UserRole.SELLER)
+                .storeName(signupRequest.storeName())
+                .storeDescription(signupRequest.storeDescription())
+                .build();
 
         userRepository.save(user);
     }

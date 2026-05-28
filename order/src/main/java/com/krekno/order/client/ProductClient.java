@@ -1,0 +1,15 @@
+package com.krekno.order.client;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.UUID;
+
+@FeignClient(name = "products")
+public interface ProductClient {
+
+    @PostMapping("/api/v1/products/{id}/reduce-stock")
+    boolean reduceStock(@PathVariable("id") UUID id, @RequestParam("quantity") int quantity);
+}

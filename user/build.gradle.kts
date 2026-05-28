@@ -18,6 +18,14 @@ repositories {
     mavenCentral()
 }
 
+extra["springCloudVersion"] = "2025.1.1"
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+    }
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

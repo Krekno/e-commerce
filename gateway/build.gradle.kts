@@ -15,7 +15,15 @@ java {
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
+}
+
+extra["springCloudVersion"] = "2025.1.1"
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+    }
 }
 
 dependencies {

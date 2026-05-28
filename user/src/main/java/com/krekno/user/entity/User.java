@@ -43,6 +43,12 @@ public class User {
 
     private UserRole role;
 
+    @Column(name = "store_name")
+    private String storeName;
+
+    @Column(name = "store_description")
+    private String storeDescription;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Address> addresses = new ArrayList<>();
