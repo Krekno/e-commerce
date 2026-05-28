@@ -23,3 +23,10 @@ management:
   tracing:
     sampling:
       probability: 1.0
+app:
+  jwt:
+    secret: ${JWT_SECRET:xjPc1RLUXukJgO9yI1ryhVa1YY3msah9pig5sWBn1pi}
+    jwtExpirationMs: 900000 # 15 minutes
+    jwtRefreshExpirationMs: 604800000 # 7 days
+    jwtCookieName: jwt-access
+    jwtRefreshCookieName: jwt-refresh
