@@ -9,6 +9,17 @@ server:
 spring:
   application:
     name: notification
+  mail:
+    host: ${SMTP_HOST:smtp.mailtrap.io}
+    port: ${SMTP_PORT:2525}
+    username: ${SMTP_USERNAME:dummy_user}
+    password: ${SMTP_PASSWORD:dummy_pass}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5436/notification

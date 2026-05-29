@@ -53,6 +53,14 @@ services:
       - pgdata-user:/var/lib/postgresql/data
     restart: unless-stopped
 
+  # Redis (Used by Cart Service)
+  redis-cart:
+    image: redis:7-alpine
+    container_name: redis-cart
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   # Elasticsearch (Used by Product Service)
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2

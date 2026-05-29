@@ -23,3 +23,19 @@ management:
   tracing:
     sampling:
       probability: 1.0
+  health:
+    circuitbreakers:
+      enabled: true
+
+spring.cloud.openfeign.circuitbreaker.enabled: true
+
+resilience4j.circuitbreaker:
+  instances:
+    products:
+      registerHealthIndicator: true
+      slidingWindowSize: 5
+      permittedNumberOfCallsInHalfOpenState: 3
+      slidingWindowType: COUNT_BASED
+      minimumNumberOfCalls: 5
+      waitDurationInOpenState: 10s
+      failureRateThreshold: 50

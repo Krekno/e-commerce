@@ -25,6 +25,9 @@ public class PaymentTransaction {
     private UUID orderId;
 
     @Column(nullable = false)
+    private String userEmail;
+
+    @Column(nullable = false)
     private BigDecimal amount;
 
     @Column(nullable = false)

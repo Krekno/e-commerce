@@ -1,6 +1,6 @@
 const API_BASE_URL = 'http://localhost:8222';
 
-function getAuthHeader() {
+function getAuthHeader(): Record<string, string> {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('jwt');
     if (token) return { Authorization: `Bearer ${token}` };
@@ -9,11 +9,24 @@ function getAuthHeader() {
 }
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...getAuthHeader(),
-    ...options.headers,
   };
+
+  if (options.headers) {
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+    } else if (Array.isArray(options.headers)) {
+      options.headers.forEach(([key, value]) => {
+        headers[key] = value;
+      });
+    } else {
+      Object.assign(headers, options.headers);
+    }
+  }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
@@ -50,6 +63,7 @@ export const login = (data: any) => fetchApi('/user/api/auth/login', { method: '
 export const register = (data: any) => fetchApi('/user/api/auth/register', { method: 'POST', body: JSON.stringify(data) });
 export const registerSeller = (data: any) => fetchApi('/user/api/auth/register-seller', { method: 'POST', body: JSON.stringify(data) });
 export const getCurrentUser = () => fetchApi('/user/api/auth/me', { method: 'GET' });
+export const updateUser = (data: any) => fetchApi('/user/api/auth/me', { method: 'PUT', body: JSON.stringify(data) });
 export const logout = () => fetchApi('/user/api/auth/logout', { method: 'POST' });
 
 // Products

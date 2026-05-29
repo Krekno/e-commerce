@@ -19,6 +19,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final com.krekno.product.repository.ProductSearchRepository productSearchRepository;
 
     public Product createProduct(ProductRequest request) {
         Category category = null;
@@ -63,5 +64,10 @@ public class ProductService {
         
         kafkaTemplate.send("product-events", "STOCK_REDUCED", product.getId().toString());
         return true;
+    }
+
+    public List<com.krekno.product.entity.ProductDocument> searchProducts(String query) {
+        // A simple query by name or description
+        return productSearchRepository.findByNameContainingOrDescriptionContaining(query, query);
     }
 }

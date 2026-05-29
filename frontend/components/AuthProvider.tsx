@@ -8,6 +8,9 @@ type User = {
   firstName: string;
   lastName: string;
   roles: string[]; // backend usually sends roles
+  profilePicture?: string;
+  storeName?: string;
+  storeDescription?: string;
 };
 
 type AuthContextType = {

@@ -34,7 +34,9 @@ export default function Navbar() {
             {mounted ? (
               !loading && user ? (
                 <>
-                  <span className="nav-link">Hi, {user.firstName}</span>
+                  <Link href="/profile" className="nav-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600', color: 'var(--foreground)' }}>
+                    <span>👤</span> {user.firstName}
+                  </Link>
                   <Link href="/seller" className="nav-link">Sell</Link>
                   <button onClick={handleLogout} className="btn" style={{ padding: '0.4rem 1rem' }}>Logout</button>
                 </>

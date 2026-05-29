@@ -134,7 +134,7 @@ public class AuthService {
         }
 
         if (updateRequest.lastName() != null && !updateRequest.lastName().isEmpty() && !updateRequest.lastName().equals(user.getLastName())) {
-            user.setFirstName(updateRequest.lastName());
+            user.setLastName(updateRequest.lastName());
         }
 
         if (updateRequest.email() != null && !updateRequest.email().isEmpty() && !updateRequest.email().equals(user.getEmail())) {

@@ -8,11 +8,13 @@ import com.krekno.order.entity.OrderItem;
 import com.krekno.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -58,5 +60,28 @@ public class OrderService {
         kafkaTemplate.send("order-events", message);
 
         return savedOrder;
+    }
+
+    @KafkaListener(topics = "payment-events", groupId = "order-group")
+    public void processPaymentEvent(String message) {
+        log.info("Received payment event: {}", message);
+        String[] parts = message.split(":");
+        if (parts.length < 2) return;
+
+        String status = parts[0];
+        try {
+            UUID orderId = UUID.fromString(parts[1]);
+            orderRepository.findById(orderId).ifPresent(order -> {
+                if ("PAYMENT_SUCCEEDED".equals(status)) {
+                    order.setStatus("PAID");
+                } else if ("PAYMENT_FAILED".equals(status)) {
+                    order.setStatus("FAILED");
+                }
+                orderRepository.save(order);
+                log.info("Order {} status updated to {}", orderId, order.getStatus());
+            });
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid order ID format in payment event: {}", message);
+        }
     }
 }

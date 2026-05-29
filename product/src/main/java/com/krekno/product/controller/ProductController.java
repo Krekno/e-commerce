@@ -41,4 +41,9 @@ public class ProductController {
         }
         return ResponseEntity.badRequest().body(false);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<com.krekno.product.entity.ProductDocument>> searchProducts(@RequestParam("q") String query) {
+        return ResponseEntity.ok(productService.searchProducts(query));
+    }
 }
