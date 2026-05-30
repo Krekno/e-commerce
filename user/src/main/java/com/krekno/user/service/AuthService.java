@@ -167,7 +167,8 @@ public class AuthService {
 
     @NotNull
     private HttpHeaders getHttpHeaders(UserDetailsImpl userDetails, String email) {
-        ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(email);
+        String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(email, role);
 
         refreshTokenService.deleteByUserId(userDetails.getId());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
@@ -193,7 +194,7 @@ public class AuthService {
         refreshTokenService.verifyExpiration(token);
         User user = token.getUser();
 
-        ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(user.getEmail());
+        ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(user.getEmail(), user.getRole().name());
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, jwtCookie.toString());

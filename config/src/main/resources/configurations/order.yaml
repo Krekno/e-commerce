@@ -1,17 +1,19 @@
 eureka:
   instance:
-    hostname: localhost
+    prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka
 server:
   port: 8081
 spring:
   application:
-    name: orders
+    name: order
+  kafka:
+    bootstrap-servers: ${KAFKA_URL:localhost:9092}
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/orders
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/orders
     username: postgres
     password: postgres
   jpa:
@@ -23,6 +25,9 @@ management:
   tracing:
     sampling:
       probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
   health:
     circuitbreakers:
       enabled: true
@@ -39,3 +44,11 @@ resilience4j.circuitbreaker:
       minimumNumberOfCalls: 5
       waitDurationInOpenState: 10s
       failureRateThreshold: 50
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:xjPc1RLUXukJgO9yI1ryhVa1YY3msah9pig5sWBn1pi}
+    jwtExpirationMs: 900000 # 15 minutes
+    jwtRefreshExpirationMs: 604800000 # 7 days
+    jwtCookieName: jwt-access
+    jwtRefreshCookieName: jwt-refresh

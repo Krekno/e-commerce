@@ -1,5 +1,7 @@
 package com.krekno.payment.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.krekno.payment.dto.PaymentRequestDto;
 import com.krekno.payment.entity.PaymentTransaction;
 import com.krekno.payment.service.PaymentService;
@@ -17,6 +19,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/{orderId}/process")
+    @PreAuthorize("hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
     public ResponseEntity<PaymentTransaction> processPayment(
             @PathVariable UUID orderId,
             @RequestBody PaymentRequestDto requestDto) {

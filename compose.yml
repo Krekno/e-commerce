@@ -56,19 +56,19 @@ services:
   # Redis (Used by Cart Service)
   redis-cart:
     image: redis:7-alpine
-    container_name: redis-cart
+    container_name: redis-cart 
     ports:
       - "6379:6379"
     restart: unless-stopped
 
   # Elasticsearch (Used by Product Service)
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.8
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
     volumes:
@@ -93,9 +93,173 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
 
+  postgres-notification:
+    image: postgres:15-alpine
+    container_name: postgres-notification
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notification
+    ports:
+      - "5436:5432"
+    volumes:
+      - pgdata-notification:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    restart: unless-stopped
+
+  config:
+    build: ./config
+    container_name: config
+    ports:
+      - "8888:8888"
+
+  discovery:
+    build: ./discovery
+    container_name: discovery
+    ports:
+      - "8761:8761"
+    env_file:
+      - ./user/.env
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    depends_on:
+      - config
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "8222:8222"
+    env_file:
+      - ./user/.env
+    environment:
+      - EUREKA_HOST=discovery
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    depends_on:
+      - config
+      - discovery
+
+  user:
+    build: ./user
+    container_name: user
+    ports:
+      - "8084:8084"
+    env_file:
+      - ./user/.env
+    environment:
+      - EUREKA_HOST=discovery
+      - DB_HOST=postgres-user
+      - DB_PORT=5432
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    depends_on:
+      - config
+      - discovery
+      - postgres-user
+
+  product:
+    build: ./product
+    container_name: product
+    ports:
+      - "8082:8082"
+    env_file:
+      - ./user/.env
+    environment:
+      - EUREKA_HOST=discovery
+      - DB_HOST=postgres-product
+      - DB_PORT=5432
+      - KAFKA_URL=kafka:19092
+      - ES_HOST=elasticsearch
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    depends_on:
+      - config
+      - discovery
+      - postgres-product
+      - kafka
+      - elasticsearch
+
+  order:
+    build: ./order
+    container_name: order
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./user/.env
+    environment:
+      - EUREKA_HOST=discovery
+      - DB_HOST=postgres-order
+      - DB_PORT=5432
+      - KAFKA_URL=kafka:19092
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    depends_on:
+      - config
+      - discovery
+      - postgres-order
+      - kafka
+
+  payment:
+    build: ./payment
+    container_name: payment
+    ports:
+      - "8083:8083"
+    env_file:
+      - ./user/.env
+    environment:
+      - EUREKA_HOST=discovery
+      - DB_HOST=postgres-payment
+      - DB_PORT=5432
+      - KAFKA_URL=kafka:19092
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    depends_on:
+      - config
+      - discovery
+      - postgres-payment
+      - kafka
+
+  notification:
+    build: ./notification
+    container_name: notification
+    ports:
+      - "8085:8085"
+    env_file:
+      - ./user/.env
+    environment:
+      - EUREKA_HOST=discovery
+      - DB_HOST=postgres-notification
+      - DB_PORT=5432
+      - KAFKA_URL=kafka:19092
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    depends_on:
+      - config
+      - discovery
+      - postgres-notification
+      - kafka
+
+  cart:
+    build: ./cart
+    container_name: cart
+    ports:
+      - "8086:8086"
+    env_file:
+      - ./user/.env
+    environment:
+      - EUREKA_HOST=discovery
+      - REDIS_HOST=redis-cart
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    depends_on:
+      - config
+      - discovery
+      - redis-cart
+
 volumes:
   pgdata-order:
   pgdata-payment:
   pgdata-product:
   pgdata-user:
+  pgdata-notification:
   esdata:

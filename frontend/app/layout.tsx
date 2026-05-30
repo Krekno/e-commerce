@@ -8,8 +8,8 @@ import Navbar from "@/components/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Krekno Market",
-  description: "Minimal Marketplace Website",
+  title: "Pazar",
+  description: "Modern E-Commerce Marketplace",
 };
 
 export default function RootLayout({

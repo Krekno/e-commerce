@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from 'react';
-import { getProductById, createOrder } from '@/lib/api';
+import { getProductById, createOrder, addCartItem } from '@/lib/api';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -67,6 +67,31 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     }
   };
 
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartSuccess, setCartSuccess] = useState(false);
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setAddingToCart(true);
+    setError('');
+    try {
+      await addCartItem(user.email, {
+        productId: product.id,
+        quantity: quantity,
+        price: product.price
+      });
+      setCartSuccess(true);
+      setTimeout(() => setCartSuccess(false), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to add to cart');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
   if (loading) return <div className="container mt-4 text-center">Loading...</div>;
   if (error) return <div className="container mt-4 text-center error-msg">{error}</div>;
   if (!product) return <div className="container mt-4 text-center">Product not found</div>;
@@ -110,8 +135,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
               ) : (
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
-                  <div className="input-group" style={{ marginBottom: 0, width: '100px' }}>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div className="input-group" style={{ marginBottom: 0, width: '80px' }}>
                     <label>Qty</label>
                     <input 
                       type="number" 
@@ -122,8 +147,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     />
                   </div>
                   <button 
+                    className="btn" 
+                    style={{ flex: 1, minWidth: '140px', backgroundColor: 'var(--border)', color: 'var(--foreground)' }} 
+                    onClick={handleAddToCart} 
+                    disabled={addingToCart || product.stockQuantity < 1}
+                  >
+                    {addingToCart ? 'Adding...' : cartSuccess ? '✔ Added' : '🛒 Add to Cart'}
+                  </button>
+                  <button 
                     className="btn btn-primary" 
-                    style={{ flex: 1 }} 
+                    style={{ flex: 1, minWidth: '140px' }} 
                     onClick={handleBuy} 
                     disabled={ordering || product.stockQuantity < 1}
                   >

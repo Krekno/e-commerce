@@ -10,7 +10,7 @@ description = "notification"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(26)
+        languageVersion = JavaLanguageVersion.of(23)
     }
 }
 
@@ -39,7 +39,7 @@ dependencies {
     // Email templates
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     // Kafka — consume OrderPlaced, PaymentSucceeded, UserRegistered
-    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
     // Config
     implementation("org.springframework.cloud:spring-cloud-starter-config")
 }

@@ -2,9 +2,9 @@ spring:
   application:
     name: payment
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:http://${CONFIG_HOST:localhost}:8888
 
 iyzico:
-  api-key: ${IYZICO_API_KEY}
-  secret-key: ${IYZICO_SECRET_KEY}
-  base-url: https://sandbox-api.iyzipay.com
+  api-key: ${IYZICO_API_KEY:dummy-api-key}
+  secret-key: ${IYZICO_SECRET_KEY:dummy-secret-key}
+  base-url: ${IYZICO_BASE_URL:https://sandbox-api.iyzipay.com}

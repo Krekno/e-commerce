@@ -1,0 +1,139 @@
+{
+  "info": {
+    "name": "E-Commerce Microservices",
+    "description": "API Collection for the E-Commerce Microservices backend. All requests should be sent to the Gateway (port 8222).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"user@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/user/api/auth/register",
+              "host": ["{{gateway_url}}"],
+              "path": ["user", "api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Seller",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"seller@test.com\",\n  \"password\": \"password123\",\n  \"companyType\": \"PERSONAL\",\n  \"address\": \"123 Tech Street\",\n  \"gsmNumber\": \"+905554443322\",\n  \"identityNumber\": \"11111111111\",\n  \"iban\": \"TR123456789012345678901234\",\n  \"storeName\": \"Tech Store\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/user/api/auth/register-seller",
+              "host": ["{{gateway_url}}"],
+              "path": ["user", "api", "auth", "register-seller"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"seller@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/user/api/auth/login",
+              "host": ["{{gateway_url}}"],
+              "path": ["user", "api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/product/api/products",
+              "host": ["{{gateway_url}}"],
+              "path": ["product", "api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Create Product (Requires Seller Role)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Wireless Mouse\",\n  \"description\": \"A great wireless mouse\",\n  \"price\": 25.50,\n  \"stockQuantity\": 100\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/product/api/products",
+              "host": ["{{gateway_url}}"],
+              "path": ["product", "api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/product/api/products/search?q=mouse",
+              "host": ["{{gateway_url}}"],
+              "path": ["product", "api", "products", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "mouse"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8222"
+    }
+  ]
+}

@@ -10,7 +10,7 @@ description = "product"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(26)
+        languageVersion = JavaLanguageVersion.of(23)
     }
 }
 
@@ -29,9 +29,15 @@ dependencyManagement {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
+    testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("io.jsonwebtoken:jjwt-api:0.12.3")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -41,8 +47,8 @@ dependencies {
     // Cloudinary — image storage (you already use this)
     implementation("com.cloudinary:cloudinary-http45:1.39.0")
     // Kafka — publish ProductUpdated / StockChanged events
-    implementation("org.springframework.kafka:spring-kafka")
-    // Search (optional but recommended for a marketplace)
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
+    // ElasticSearch
     implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
     implementation("org.springframework.cloud:spring-cloud-starter-config")
 }

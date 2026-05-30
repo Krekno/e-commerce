@@ -30,7 +30,7 @@ export default function Home() {
     <div className="container">
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '1rem' }}>
-          Welcome to <span className="nav-brand">Krekno Market</span>
+          Welcome to <span className="nav-brand">Pazar</span>
         </h1>
         <p className="text-muted" style={{ fontSize: '1.25rem' }}>
           Discover amazing products directly from sellers.

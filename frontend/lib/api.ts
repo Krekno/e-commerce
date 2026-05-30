@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8222';
+const API_BASE_URL = 'http://127.0.0.1:8222';
 
 function getAuthHeader(): Record<string, string> {
   if (typeof window !== 'undefined') {
@@ -31,6 +31,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   // Handle specific backend structures where headers contain JWT
@@ -59,12 +60,12 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
 }
 
 // User & Auth
-export const login = (data: any) => fetchApi('/user/api/auth/login', { method: 'POST', body: JSON.stringify(data) });
-export const register = (data: any) => fetchApi('/user/api/auth/register', { method: 'POST', body: JSON.stringify(data) });
-export const registerSeller = (data: any) => fetchApi('/user/api/auth/register-seller', { method: 'POST', body: JSON.stringify(data) });
-export const getCurrentUser = () => fetchApi('/user/api/auth/me', { method: 'GET' });
-export const updateUser = (data: any) => fetchApi('/user/api/auth/me', { method: 'PUT', body: JSON.stringify(data) });
-export const logout = () => fetchApi('/user/api/auth/logout', { method: 'POST' });
+export const login = (data: any) => fetchApi('/users/api/auth/login', { method: 'POST', body: JSON.stringify(data) });
+export const register = (data: any) => fetchApi('/users/api/auth/register', { method: 'POST', body: JSON.stringify(data) });
+export const registerSeller = (data: any) => fetchApi('/users/api/auth/register-seller', { method: 'POST', body: JSON.stringify(data) });
+export const getCurrentUser = () => fetchApi('/users/api/auth/me', { method: 'GET' });
+export const updateUser = (data: any) => fetchApi('/users/api/auth/me', { method: 'PUT', body: JSON.stringify(data) });
+export const logout = () => fetchApi('/users/api/auth/logout', { method: 'POST' });
 
 // Products
 export const getProducts = () => fetchApi('/product/api/products', { method: 'GET' });
@@ -73,3 +74,12 @@ export const createProduct = (data: any) => fetchApi('/product/api/products', { 
 
 // Orders
 export const createOrder = (data: any) => fetchApi('/order/api/orders', { method: 'POST', body: JSON.stringify(data) });
+
+// Cart
+export const getCart = (userId: string) => fetchApi(`/cart/api/cart/${userId}`, { method: 'GET' });
+export const addCartItem = (userId: string, data: any) => fetchApi(`/cart/api/cart/${userId}/items`, { method: 'POST', body: JSON.stringify(data) });
+export const removeCartItem = (userId: string, productId: string) => fetchApi(`/cart/api/cart/${userId}/items/${productId}`, { method: 'DELETE' });
+export const clearCart = (userId: string) => fetchApi(`/cart/api/cart/${userId}`, { method: 'DELETE' });
+
+// Payment
+export const processPayment = (orderId: string, data: any) => fetchApi(`/payment/api/payments/${orderId}/process`, { method: 'POST', body: JSON.stringify(data) });

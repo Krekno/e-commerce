@@ -1,17 +1,21 @@
 eureka:
   instance:
-    hostname: localhost
+    prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka
 server:
   port: 8083
 spring:
   application:
-    name: products
+    name: product
+  kafka:
+    bootstrap-servers: ${KAFKA_URL:localhost:9092}
+  elasticsearch:
+    uris: http://${ES_HOST:localhost}:9200
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5434/products
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/products
     username: postgres
     password: postgres
   jpa:
@@ -23,3 +27,11 @@ management:
   tracing:
     sampling:
       probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+app:
+  jwt:
+    secret: ${JWT_SECRET:xjPc1RLUXukJgO9yI1ryhVa1YY3msah9pig5sWBn1pi}
+    jwtCookieName: jwt-access
+

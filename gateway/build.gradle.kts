@@ -1,6 +1,6 @@
 plugins {
 	java
-	id("org.springframework.boot") version "4.0.6"
+	id("org.springframework.boot") version "3.3.6"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -10,7 +10,7 @@ description = "gateway"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(26)
+		languageVersion = JavaLanguageVersion.of(23)
 	}
 }
 
@@ -18,7 +18,7 @@ repositories {
     mavenCentral()
 }
 
-extra["springCloudVersion"] = "2025.1.1"
+extra["springCloudVersion"] = "2023.0.3"
 
 dependencyManagement {
     imports {
@@ -34,7 +34,8 @@ dependencies {
 	implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
-	implementation("org.springframework.cloud:spring-cloud-starter-gateway:4.3.0")
+	implementation("org.springframework.cloud:spring-cloud-starter-gateway")
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j")
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")

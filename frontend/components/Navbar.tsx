@@ -28,12 +28,15 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="container">
-        <Link href="/" className="nav-brand">Krekno Market</Link>
+        <Link href="/" className="nav-brand">Pazar</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
           <div className="nav-links">
             {mounted ? (
               !loading && user ? (
                 <>
+                  <Link href="/cart" className="nav-link" style={{ fontSize: '1.2rem', paddingRight: '1rem' }} title="View Cart">
+                    🛒
+                  </Link>
                   <Link href="/profile" className="nav-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600', color: 'var(--foreground)' }}>
                     <span>👤</span> {user.firstName}
                   </Link>

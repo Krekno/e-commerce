@@ -32,8 +32,8 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    public ResponseCookie generateJwtCookie(String email) {
-        String jwt = generateTokenFromEmail(email);
+    public ResponseCookie generateJwtCookie(String email, String role) {
+        String jwt = generateTokenFromEmail(email, role);
         return ResponseCookie.from(jwtCookie, jwt)
                 .path("/")
                 .maxAge(jwtExpirationMs / 1000) // seconds
@@ -90,9 +90,10 @@ public class JwtUtils {
         }
     }
 
-    public String generateTokenFromEmail(String email) {
+    public String generateTokenFromEmail(String email, String role) {
         return Jwts.builder()
                 .subject(email)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key())
