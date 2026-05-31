@@ -37,7 +37,8 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             }
             
             // Allow public product catalog browsing
-            if (request.getMethod().name().equalsIgnoreCase("GET") && path.startsWith("/product/api/products")) {
+            if (request.getMethod().name().equalsIgnoreCase("GET") && 
+               (path.startsWith("/product/api/products") || path.startsWith("/product/api/categories"))) {
                 return chain.filter(exchange);
             }
             
