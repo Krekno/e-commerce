@@ -50,9 +50,6 @@ export default function RegisterPage() {
     <div className="container">
       <div className="auth-container card">
         <h2 className="text-center">Create an Account</h2>
-        <p className="text-center text-muted text-sm mt-2 mb-4">
-          Looking to sell? <Link href="/register/seller" style={{ color: 'var(--primary)' }}>Register as a Seller</Link>
-        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-2">

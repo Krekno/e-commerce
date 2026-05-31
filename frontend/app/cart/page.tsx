@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getCart, getProductById, removeCartItem } from '@/lib/api';
+import { getCart, getProductById, removeCartItem, updateCartItemQuantity } from '@/lib/api';
 import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 type CartItemDetails = {
   productId: string;
@@ -30,7 +31,7 @@ export default function CartPage() {
 
     const fetchCartItems = async () => {
       try {
-        const cart = await getCart(user.email);
+        const cart = await getCart(user.id);
         if (cart && cart.items && cart.items.length > 0) {
           // Fetch product details for each item
           const detailedItems = await Promise.all(
@@ -65,10 +66,26 @@ export default function CartPage() {
   const handleRemove = async (productId: string) => {
     if (!user) return;
     try {
-      await removeCartItem(user.email, productId);
+      await removeCartItem(user.id, productId);
       setItems(items.filter(i => i.productId !== productId));
+      toast.success('Item removed');
     } catch (err: any) {
-      alert('Failed to remove item');
+      toast.error('Failed to remove item');
+    }
+  };
+
+  const handleQuantityChange = async (productId: string, newQuantity: number) => {
+    if (!user) return;
+    if (newQuantity < 1) return;
+    
+    const previousItems = [...items];
+    setItems(items.map(i => i.productId === productId ? { ...i, quantity: newQuantity } : i));
+    
+    try {
+      await updateCartItemQuantity(user.id, productId, newQuantity);
+    } catch (err: any) {
+      toast.error('Failed to update quantity');
+      setItems(previousItems);
     }
   };
 
@@ -108,9 +125,18 @@ export default function CartPage() {
                   <Link href={`/products/${item.productId}`} style={{ fontWeight: '600', fontSize: '1.25rem', color: 'var(--foreground)', textDecoration: 'none' }}>
                     {item.name}
                   </Link>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', color: 'var(--muted)' }}>
-                    <span>${item.price.toFixed(2)} x {item.quantity}</span>
-                    <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>${(item.price * item.quantity).toFixed(2)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', color: 'var(--muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.9rem' }}>₺{item.price.toFixed(2)} x</span>
+                      <input 
+                        type="number" 
+                        min="1"
+                        value={item.quantity} 
+                        onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value) || 1)}
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', background: 'var(--background)', color: 'var(--foreground)' }}
+                      />
+                    </div>
+                    <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>₺{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 </div>
                 <button 
@@ -126,7 +152,7 @@ export default function CartPage() {
           
           <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '1.5rem' }}>
-              Total: <span style={{ fontWeight: '800', color: 'var(--primary)' }}>${total.toFixed(2)}</span>
+              Total: <span style={{ fontWeight: '800', color: 'var(--primary)' }}>₺{total.toFixed(2)}</span>
             </div>
             <Link href="/checkout" className="btn btn-primary" style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}>
               Proceed to Checkout

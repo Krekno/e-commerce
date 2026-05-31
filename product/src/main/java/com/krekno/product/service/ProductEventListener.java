@@ -11,6 +11,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -20,6 +21,7 @@ public class ProductEventListener {
     private final ProductRepository productRepository;
     private final ProductSearchRepository productSearchRepository;
 
+    @Transactional
     @KafkaListener(topics = "product-events", groupId = "product-search-group")
     public void handleProductEvent(ConsumerRecord<String, String> record) {
         String eventType = record.key();
@@ -48,6 +50,7 @@ public class ProductEventListener {
                 .stockQuantity(product.getStockQuantity())
                 .imageUrl(product.getImageUrl())
                 .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
+                .sellerEmail(product.getSellerEmail())
                 .build();
     }
 }

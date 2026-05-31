@@ -18,4 +18,7 @@ public class OrderItemRequest {
 
     @NotNull(message = "Price is required")
     private BigDecimal price; // Passed from frontend for simplicity, real app would verify it against Product Service
+
+    @NotNull(message = "Seller email is required")
+    private String sellerEmail;
 }

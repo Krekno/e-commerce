@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { background-color: #ffffff; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        .order-details { margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; }
+        .total { font-size: 1.2em; font-weight: bold; text-align: right; margin-top: 15px; color: #e74c3c; }
+        .footer { margin-top: 30px; font-size: 0.9em; color: #7f8c8d; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Thank you for your order!</h1>
+    <p>Hi <span th:text="${email}">User</span>,</p>
+    <p>We've received your order and are currently processing it. Here are your order details:</p>
+
+    <div class="order-details">
+        <p><strong>Order ID:</strong> <span th:text="${orderId}">123</span></p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${items}">
+                    <td th:text="${item.productId}">P1</td>
+                    <td th:text="${item.quantity}">1</td>
+                    <td th:text="'$' + ${item.price}">$10.00</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="total">
+            Total: $<span th:text="${total}">0.00</span>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Thank you for shopping with us!</p>
+        <p>&copy; 2026 Pazar E-commerce.</p>
+    </div>
+</div>
+</body>
+</html>

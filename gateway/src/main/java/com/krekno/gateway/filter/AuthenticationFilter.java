@@ -31,9 +31,16 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             ServerHttpRequest request = exchange.getRequest();
 
             // Allow auth endpoints to bypass authentication
-            if (request.getURI().getPath().contains("/auth/")) {
+            String path = request.getURI().getPath();
+            if (path.contains("/auth/")) {
                 return chain.filter(exchange);
             }
+            
+            // Allow public product catalog browsing
+            if (request.getMethod().name().equalsIgnoreCase("GET") && path.startsWith("/product/api/products")) {
+                return chain.filter(exchange);
+            }
+            
 
             HttpCookie cookie = request.getCookies().getFirst(jwtCookieName);
             String token = null;

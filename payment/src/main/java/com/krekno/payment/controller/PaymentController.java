@@ -20,11 +20,21 @@ public class PaymentController {
 
     @PostMapping("/{orderId}/process")
     @PreAuthorize("hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
-    public ResponseEntity<PaymentTransaction> processPayment(
+    public ResponseEntity<com.krekno.payment.dto.PaymentResponseDto> processPayment(
             @PathVariable UUID orderId,
             @RequestBody PaymentRequestDto requestDto) {
         
-        PaymentTransaction transaction = paymentService.processPayment(orderId, requestDto);
-        return ResponseEntity.ok(transaction);
+        com.krekno.payment.dto.PaymentResponseDto response = paymentService.processPayment(orderId, requestDto);
+        return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{orderId}/refund")
+    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    public ResponseEntity<com.krekno.payment.dto.PaymentResponseDto> refundPayment(
+            @PathVariable UUID orderId) {
+        
+        com.krekno.payment.dto.PaymentResponseDto response = paymentService.refundPayment(orderId);
+        return ResponseEntity.ok(response);
+    }
+
 }

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.UUID;
 
-@FeignClient(name = "products", fallback = ProductClientFallback.class)
+@FeignClient(name = "product", fallback = ProductClientFallback.class)
 public interface ProductClient {
 
     @PostMapping("/api/products/{id}/reduce-stock")

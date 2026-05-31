@@ -1,9 +1,18 @@
 package com.krekno.user.service;
 
 import com.iyzipay.Options;
+import com.iyzipay.model.Address;
+import com.iyzipay.model.BasketItem;
+import com.iyzipay.model.BasketItemType;
+import com.iyzipay.model.Buyer;
 import com.iyzipay.model.Currency;
 import com.iyzipay.model.Locale;
+import com.iyzipay.model.Payment;
+import com.iyzipay.model.PaymentCard;
+import com.iyzipay.model.PaymentChannel;
+import com.iyzipay.model.PaymentGroup;
 import com.iyzipay.model.SubMerchant;
+import com.iyzipay.request.CreatePaymentRequest;
 import com.iyzipay.request.CreateSubMerchantRequest;
 import com.krekno.user.dto.LoginRequest;
 import com.krekno.user.dto.SellerSignupRequest;
@@ -16,7 +25,8 @@ import com.krekno.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -30,7 +40,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -79,50 +92,94 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public void registerSeller(SellerSignupRequest signupRequest) {
-        if (userRepository.existsByEmail(signupRequest.email())) {
-            throw new IllegalArgumentException("Email is already in use!");
+    public HttpHeaders registerSeller(SellerSignupRequest signupRequest, UserDetailsImpl userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
+
+        if (user.getSellerProfile() != null || user.getRole() == UserRole.SELLER) {
+            throw new IllegalArgumentException("User is already a seller!");
         }
 
-        User user = User.builder()
-                .firstName(signupRequest.firstName())
-                .lastName(signupRequest.lastName())
-                .email(signupRequest.email())
-                .password(passwordEncoder.encode(signupRequest.password()))
-                .profilePicture(signupRequest.profilePicture())
-                .role(UserRole.SELLER)
-                .build();
-                
-        CreateSubMerchantRequest request = new CreateSubMerchantRequest();
+        CreatePaymentRequest request = new CreatePaymentRequest();
         request.setLocale(Locale.TR.getValue());
         request.setConversationId(UUID.randomUUID().toString());
-        request.setSubMerchantExternalId(UUID.randomUUID().toString());
-        request.setSubMerchantType(signupRequest.companyType());
-        request.setAddress(signupRequest.address());
-        request.setContactName(signupRequest.firstName());
-        request.setContactSurname(signupRequest.lastName());
-        request.setEmail(signupRequest.email());
-        request.setGsmNumber(signupRequest.gsmNumber());
-        request.setIdentityNumber(signupRequest.identityNumber());
-        request.setIban(signupRequest.iban());
+        request.setPrice(new BigDecimal("5000.0"));
+        request.setPaidPrice(new BigDecimal("5000.0"));
         request.setCurrency(Currency.TRY.name());
+        request.setInstallment(1);
+        request.setBasketId("SELLER_SUB_" + user.getId().toString());
+        request.setPaymentChannel(PaymentChannel.WEB.name());
+        request.setPaymentGroup(PaymentGroup.SUBSCRIPTION.name());
 
-        SubMerchant subMerchant = SubMerchant.create(request, getOptions());
+        PaymentCard paymentCard = new PaymentCard();
+        paymentCard.setCardHolderName(signupRequest.cardHolderName());
+        paymentCard.setCardNumber(signupRequest.cardNumber());
+        paymentCard.setExpireMonth(signupRequest.expireMonth());
+        paymentCard.setExpireYear(signupRequest.expireYear());
+        paymentCard.setCvc(signupRequest.cvc());
+        paymentCard.setRegisterCard(0);
+        request.setPaymentCard(paymentCard);
 
-        if (!"success".equalsIgnoreCase(subMerchant.getStatus())) {
-            throw new RuntimeException("Failed to register seller with Iyzico: " + subMerchant.getErrorMessage());
+        Buyer buyer = new Buyer();
+        buyer.setId(user.getId().toString());
+        buyer.setName(user.getFirstName());
+        buyer.setSurname(user.getLastName());
+        buyer.setGsmNumber(signupRequest.gsmNumber());
+        buyer.setEmail(user.getEmail());
+        buyer.setIdentityNumber(signupRequest.identityNumber());
+        buyer.setRegistrationAddress(signupRequest.address());
+        buyer.setIp("85.34.78.112");
+        buyer.setCity("Istanbul");
+        buyer.setCountry("Turkey");
+        buyer.setZipCode("34000");
+        request.setBuyer(buyer);
+
+        Address billingAddress = new Address();
+        billingAddress.setContactName(user.getFirstName() + " " + user.getLastName());
+        billingAddress.setCity("Istanbul");
+        billingAddress.setCountry("Turkey");
+        billingAddress.setAddress(signupRequest.address());
+        billingAddress.setZipCode("34000");
+        request.setBillingAddress(billingAddress);
+
+        Address shippingAddress = new Address();
+        shippingAddress.setContactName(user.getFirstName() + " " + user.getLastName());
+        shippingAddress.setCity("Istanbul");
+        shippingAddress.setCountry("Turkey");
+        shippingAddress.setAddress(signupRequest.address());
+        shippingAddress.setZipCode("34000");
+        request.setShippingAddress(shippingAddress);
+
+        List<BasketItem> basketItems = new ArrayList<>();
+        BasketItem firstBasketItem = new BasketItem();
+        firstBasketItem.setId("BI_SELLER");
+        firstBasketItem.setName("Seller Registration Fee");
+        firstBasketItem.setCategory1("Services");
+        firstBasketItem.setItemType(BasketItemType.VIRTUAL.name());
+        firstBasketItem.setPrice(new BigDecimal("5000.0"));
+        basketItems.add(firstBasketItem);
+        request.setBasketItems(basketItems);
+
+        Payment payment = Payment.create(request, getOptions());
+        if (!"success".equalsIgnoreCase(payment.getStatus())) {
+            throw new IllegalArgumentException("Payment failed! " + payment.getErrorMessage());
         }
+
+        String subMerchantKey = "mock_smk_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
                 
         Seller seller = Seller.builder()
                 .storeName(signupRequest.storeName())
                 .storeDescription(signupRequest.storeDescription())
-                .subMerchantKey(subMerchant.getSubMerchantKey())
+                .subMerchantKey(subMerchantKey)
                 .user(user)
                 .build();
                 
         user.setSellerProfile(seller);
+        user.setRole(UserRole.SELLER);
 
         userRepository.save(user);
+        
+        return getHttpHeaders(user.getId(), user.getEmail(), user.getRole().name());
     }
 
     public HttpHeaders updateUser(SignupRequest updateRequest, UserDetailsImpl userDetails) {
@@ -151,7 +208,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return getHttpHeaders(userDetails, user.getEmail());
+        return getHttpHeaders(user.getId(), user.getEmail(), user.getRole().name());
     }
 
     public HttpHeaders authenticateUser(LoginRequest loginRequest) {
@@ -162,16 +219,16 @@ public class AuthService {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         assert userDetails != null;
-        return getHttpHeaders(userDetails, userDetails.getEmail());
+        String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        return getHttpHeaders(userDetails.getId(), userDetails.getEmail(), role);
     }
 
     @NotNull
-    private HttpHeaders getHttpHeaders(UserDetailsImpl userDetails, String email) {
-        String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+    private HttpHeaders getHttpHeaders(UUID userId, String email, String role) {
         ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(email, role);
 
-        refreshTokenService.deleteByUserId(userDetails.getId());
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+        refreshTokenService.deleteByUserId(userId);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userId);
         ResponseCookie jwtRefreshCookie = jwtUtils.generateRefreshJwtCookie(refreshToken.getToken());
 
         HttpHeaders headers = new HttpHeaders();
@@ -185,11 +242,11 @@ public class AuthService {
         String refreshToken = jwtUtils.getJwtRefreshFromCookies(request);
 
         if (refreshToken == null || refreshToken.isEmpty()) {
-            throw new IllegalArgumentException("Refresh Token is empty!");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh Token is empty!");
         }
 
         RefreshToken token = refreshTokenService.findByToken(refreshToken)
-                .orElseThrow(() -> new ResourceNotFoundException("Refresh token is not in database!"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token is not in database!"));
 
         refreshTokenService.verifyExpiration(token);
         User user = token.getUser();

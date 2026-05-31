@@ -12,6 +12,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata-order:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orders"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   postgres-payment:
@@ -25,6 +30,11 @@ services:
       - "5433:5432"
     volumes:
       - pgdata-payment:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d payments"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   postgres-product:
@@ -38,6 +48,11 @@ services:
       - "5434:5432"
     volumes:
       - pgdata-product:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d products"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   postgres-user:
@@ -51,6 +66,11 @@ services:
       - "5435:5432"
     volumes:
       - pgdata-user:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d users"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # Redis (Used by Cart Service)
@@ -59,6 +79,11 @@ services:
     container_name: redis-cart 
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # Elasticsearch (Used by Product Service)
@@ -73,6 +98,11 @@ services:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
   # Kafka (Used by Order, Payment, Product, Notification)
@@ -104,6 +134,11 @@ services:
       - "5436:5432"
     volumes:
       - pgdata-notification:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notification"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   zipkin:
@@ -118,6 +153,12 @@ services:
     container_name: config
     ports:
       - "8888:8888"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/application/default"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   discovery:
     build: ./discovery
@@ -125,11 +166,18 @@ services:
     ports:
       - "8761:8761"
     env_file:
-      - ./user/.env
+      - ./.env
     environment:
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     depends_on:
-      - config
+      config:
+        condition: service_healthy
 
   gateway:
     build: ./gateway
@@ -137,13 +185,15 @@ services:
     ports:
       - "8222:8222"
     env_file:
-      - ./user/.env
+      - ./.env
     environment:
       - EUREKA_HOST=discovery
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
     depends_on:
-      - config
-      - discovery
+      config:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
 
   user:
     build: ./user
@@ -151,16 +201,19 @@ services:
     ports:
       - "8084:8084"
     env_file:
-      - ./user/.env
+      - ./.env
     environment:
       - EUREKA_HOST=discovery
       - DB_HOST=postgres-user
       - DB_PORT=5432
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
     depends_on:
-      - config
-      - discovery
-      - postgres-user
+      config:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+      postgres-user:
+        condition: service_healthy
 
   product:
     build: ./product
@@ -168,7 +221,7 @@ services:
     ports:
       - "8082:8082"
     env_file:
-      - ./user/.env
+      - ./.env
     environment:
       - EUREKA_HOST=discovery
       - DB_HOST=postgres-product
@@ -177,11 +230,16 @@ services:
       - ES_HOST=elasticsearch
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
     depends_on:
-      - config
-      - discovery
-      - postgres-product
-      - kafka
-      - elasticsearch
+      config:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+      postgres-product:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   order:
     build: ./order
@@ -189,7 +247,7 @@ services:
     ports:
       - "8081:8081"
     env_file:
-      - ./user/.env
+      - ./.env
     environment:
       - EUREKA_HOST=discovery
       - DB_HOST=postgres-order
@@ -197,10 +255,14 @@ services:
       - KAFKA_URL=kafka:19092
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
     depends_on:
-      - config
-      - discovery
-      - postgres-order
-      - kafka
+      config:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+      postgres-order:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   payment:
     build: ./payment
@@ -208,7 +270,7 @@ services:
     ports:
       - "8083:8083"
     env_file:
-      - ./user/.env
+      - ./.env
     environment:
       - EUREKA_HOST=discovery
       - DB_HOST=postgres-payment
@@ -216,10 +278,14 @@ services:
       - KAFKA_URL=kafka:19092
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
     depends_on:
-      - config
-      - discovery
-      - postgres-payment
-      - kafka
+      config:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+      postgres-payment:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   notification:
     build: ./notification
@@ -227,7 +293,7 @@ services:
     ports:
       - "8085:8085"
     env_file:
-      - ./user/.env
+      - ./.env
     environment:
       - EUREKA_HOST=discovery
       - DB_HOST=postgres-notification
@@ -235,10 +301,14 @@ services:
       - KAFKA_URL=kafka:19092
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
     depends_on:
-      - config
-      - discovery
-      - postgres-notification
-      - kafka
+      config:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+      postgres-notification:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   cart:
     build: ./cart
@@ -246,15 +316,18 @@ services:
     ports:
       - "8086:8086"
     env_file:
-      - ./user/.env
+      - ./.env
     environment:
       - EUREKA_HOST=discovery
       - REDIS_HOST=redis-cart
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config:8888
     depends_on:
-      - config
-      - discovery
-      - redis-cart
+      config:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+      redis-cart:
+        condition: service_healthy
 
 volumes:
   pgdata-order:

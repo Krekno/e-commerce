@@ -44,6 +44,22 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
+    public Cart updateItemQuantity(String userId, UUID productId, int quantity) {
+        Cart cart = getCart(userId);
+        Optional<CartItem> existingItem = cart.getItems().stream()
+                .filter(i -> i.getProductId().equals(productId))
+                .findFirst();
+
+        if (existingItem.isPresent()) {
+            if (quantity <= 0) {
+                cart.getItems().remove(existingItem.get());
+            } else {
+                existingItem.get().setQuantity(quantity);
+            }
+        }
+        return cartRepository.save(cart);
+    }
+
     public void clearCart(String userId) {
         cartRepository.deleteById(userId);
     }

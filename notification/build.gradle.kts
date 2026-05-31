@@ -27,6 +27,8 @@ dependencyManagement {
 }
 
 dependencies {
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
     implementation("org.springframework.boot:spring-boot-starter")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -42,6 +44,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     // Config
     implementation("org.springframework.cloud:spring-cloud-starter-config")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 }
 
 tasks.withType<Test> {

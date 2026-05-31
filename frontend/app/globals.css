@@ -101,7 +101,7 @@ h3 { font-size: 1.35rem; }
 /* Layout Components */
 .container {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 1.5rem;
   animation: fadeIn 0.6s ease-out;
@@ -114,17 +114,15 @@ h3 { font-size: 1.35rem; }
 /* Cards & Containers */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
+  box-shadow: var(--shadow-sm);
   border-radius: var(--radius);
   padding: 2rem;
-  box-shadow: var(--shadow-md);
   transition: var(--transition);
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 /* Custom Interactive Forms */
@@ -303,7 +301,7 @@ h3 { font-size: 1.35rem; }
 
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-cols-3 { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-.grid-cols-4 { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
 
 @media (max-width: 768px) {
   .grid-cols-2, .grid-cols-4 {

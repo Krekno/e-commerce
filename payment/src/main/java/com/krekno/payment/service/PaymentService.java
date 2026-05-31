@@ -7,12 +7,14 @@ import com.iyzipay.model.BasketItemType;
 import com.iyzipay.model.Buyer;
 import com.iyzipay.model.Currency;
 import com.iyzipay.model.Locale;
-import com.iyzipay.model.Payment;
 import com.iyzipay.model.PaymentCard;
 import com.iyzipay.model.PaymentChannel;
 import com.iyzipay.model.PaymentGroup;
+import com.iyzipay.model.Payment;
 import com.iyzipay.request.CreatePaymentRequest;
+import com.iyzipay.request.CreateThreedsPaymentRequest;
 import com.krekno.payment.dto.PaymentRequestDto;
+import com.krekno.payment.dto.PaymentResponseDto;
 import com.krekno.payment.entity.PaymentTransaction;
 import com.krekno.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import com.krekno.payment.client.UserClient;
+import com.krekno.payment.client.AddressDto;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,6 +38,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final UserClient userClient;
 
     @Value("${iyzico.api-key}")
     private String apiKey;
@@ -61,12 +66,16 @@ public class PaymentService {
             UUID orderId = UUID.fromString(parts[1]);
             BigDecimal amount = new BigDecimal(parts[2]);
             String userEmail = parts.length > 3 ? parts[3] : "unknown@example.com";
+            UUID shippingAddressId = parts.length > 4 ? UUID.fromString(parts[4]) : null;
+            UUID billingAddressId = parts.length > 5 ? UUID.fromString(parts[5]) : null;
 
             PaymentTransaction transaction = PaymentTransaction.builder()
                     .orderId(orderId)
                     .amount(amount)
                     .userEmail(userEmail)
                     .status("PENDING")
+                    .shippingAddressId(shippingAddressId)
+                    .billingAddressId(billingAddressId)
                     .build();
 
             paymentRepository.save(transaction);
@@ -74,7 +83,7 @@ public class PaymentService {
         }
     }
 
-    public PaymentTransaction processPayment(UUID orderId, PaymentRequestDto dto) {
+    public PaymentResponseDto processPayment(UUID orderId, PaymentRequestDto dto) {
         PaymentTransaction transaction = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new RuntimeException("Transaction not found for order: " + orderId));
 
@@ -82,24 +91,82 @@ public class PaymentService {
             throw new RuntimeException("Transaction is not PENDING. Current status: " + transaction.getStatus());
         }
 
-        Payment payment = executeIyzicoPayment(transaction, dto);
-        boolean success = "success".equalsIgnoreCase(payment.getStatus());
+        com.iyzipay.model.Payment payment = executeIyzicoPayment(transaction, dto);
 
-        transaction.setStatus(success ? "SUCCESS" : "FAILED");
-        transaction.setIyzicoPaymentId(payment.getPaymentId());
-        paymentRepository.save(transaction);
-
-        if (success) {
+        if ("success".equalsIgnoreCase(payment.getStatus())) {
+            transaction.setStatus("SUCCESS");
+            transaction.setIyzicoPaymentId(payment.getPaymentId());
+            if (payment.getPaymentItems() != null && !payment.getPaymentItems().isEmpty()) {
+                transaction.setPaymentTransactionId(payment.getPaymentItems().get(0).getPaymentTransactionId());
+            }
+            paymentRepository.save(transaction);
+            
             kafkaTemplate.send("payment-events", "PAYMENT_SUCCEEDED:" + orderId + ":" + transaction.getUserEmail());
+            
+            return PaymentResponseDto.builder()
+                    .status("success")
+                    .build();
         } else {
-            log.error("Payment failed. Error Code: {}, Error Message: {}", payment.getErrorCode(), payment.getErrorMessage());
+            transaction.setStatus("FAILED");
+            paymentRepository.save(transaction);
+            
+            log.error("Payment failed. Error Code: {}, Error Message: {}", 
+                payment.getErrorCode(), payment.getErrorMessage());
             kafkaTemplate.send("payment-events", "PAYMENT_FAILED:" + orderId + ":" + transaction.getUserEmail());
+            
+            return PaymentResponseDto.builder()
+                    .status("failure")
+                    .errorMessage(payment.getErrorMessage())
+                    .build();
         }
-
-        return transaction;
     }
 
-    private Payment executeIyzicoPayment(PaymentTransaction transaction, PaymentRequestDto dto) {
+
+    public PaymentResponseDto refundPayment(UUID orderId) {
+        PaymentTransaction transaction = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found for order: " + orderId));
+
+        if (!"SUCCESS".equals(transaction.getStatus())) {
+            throw new RuntimeException("Transaction is not SUCCESS. Current status: " + transaction.getStatus());
+        }
+
+        if (transaction.getPaymentTransactionId() == null) {
+            throw new RuntimeException("No Iyzico payment transaction ID found for this order");
+        }
+
+        log.info("Processing refund via Iyzico for Order: {}, TxId: {}", transaction.getOrderId(), transaction.getPaymentTransactionId());
+
+        com.iyzipay.request.CreateRefundRequest request = new com.iyzipay.request.CreateRefundRequest();
+        request.setLocale(Locale.TR.getValue());
+        request.setConversationId(transaction.getOrderId().toString() + "_REFUND");
+        request.setPaymentTransactionId(transaction.getPaymentTransactionId());
+        request.setPrice(transaction.getAmount());
+        request.setCurrency(Currency.TRY.name());
+        request.setIp("85.34.78.112"); // Hardcoded IP for sandbox
+
+        com.iyzipay.model.Refund refund = com.iyzipay.model.Refund.create(request, getOptions());
+
+        if ("success".equalsIgnoreCase(refund.getStatus())) {
+            transaction.setStatus("REFUNDED");
+            paymentRepository.save(transaction);
+            
+            kafkaTemplate.send("payment-events", "REFUND_SUCCEEDED:" + orderId + ":" + transaction.getUserEmail());
+            
+            return PaymentResponseDto.builder()
+                    .status("success")
+                    .build();
+        } else {
+            log.error("Refund failed. Error Code: {}, Error Message: {}", 
+                refund.getErrorCode(), refund.getErrorMessage());
+            
+            return PaymentResponseDto.builder()
+                    .status("failure")
+                    .errorMessage(refund.getErrorMessage())
+                    .build();
+        }
+    }
+
+    private com.iyzipay.model.Payment executeIyzicoPayment(PaymentTransaction transaction, PaymentRequestDto dto) {
         log.info("Processing actual payment via Iyzico for Order: {}, Amount: {}", transaction.getOrderId(), transaction.getAmount());
 
         CreatePaymentRequest request = new CreatePaymentRequest();
@@ -114,7 +181,7 @@ public class PaymentService {
         request.setPaymentGroup(PaymentGroup.PRODUCT.name());
 
         PaymentCard paymentCard = new PaymentCard();
-        paymentCard.setCardHolderName(dto.getCardHolderName());
+        paymentCard.setCardHolderName(dto.getFirstName() + " " + dto.getLastName());
         paymentCard.setCardNumber(dto.getCardNumber());
         paymentCard.setExpireMonth(dto.getExpireMonth());
         paymentCard.setExpireYear(dto.getExpireYear());
@@ -122,34 +189,37 @@ public class PaymentService {
         paymentCard.setRegisterCard(0);
         request.setPaymentCard(paymentCard);
 
+        AddressDto shipAddrDto = userClient.getAddressById(transaction.getShippingAddressId());
+        AddressDto billAddrDto = userClient.getAddressById(transaction.getBillingAddressId());
+
         Buyer buyer = new Buyer();
         buyer.setId("BY789");
-        buyer.setName(dto.getCardHolderName());
-        buyer.setSurname("User");
-        buyer.setGsmNumber("+905324000000");
+        buyer.setName(dto.getFirstName());
+        buyer.setSurname(dto.getLastName());
+        buyer.setGsmNumber(billAddrDto.getPhone());
         buyer.setEmail(transaction.getUserEmail());
-        buyer.setIdentityNumber("74300864791");
-        buyer.setRegistrationAddress("Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1");
-        buyer.setIp("85.34.78.112");
-        buyer.setCity("Istanbul");
-        buyer.setCountry("Turkey");
-        buyer.setZipCode("34732");
+        buyer.setIdentityNumber("74300864791"); // Still hardcoded, need real TCKN
+        buyer.setRegistrationAddress(billAddrDto.getStreet());
+        buyer.setIp("85.34.78.112"); // Hardcoded IP
+        buyer.setCity(billAddrDto.getCity());
+        buyer.setCountry(billAddrDto.getCountry());
+        buyer.setZipCode(billAddrDto.getPostalCode());
         request.setBuyer(buyer);
 
         Address shippingAddress = new Address();
-        shippingAddress.setContactName(dto.getCardHolderName());
-        shippingAddress.setCity("Istanbul");
-        shippingAddress.setCountry("Turkey");
-        shippingAddress.setAddress("Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1");
-        shippingAddress.setZipCode("34732");
+        shippingAddress.setContactName(dto.getFirstName() + " " + dto.getLastName());
+        shippingAddress.setCity(shipAddrDto.getCity());
+        shippingAddress.setCountry(shipAddrDto.getCountry());
+        shippingAddress.setAddress(shipAddrDto.getStreet());
+        shippingAddress.setZipCode(shipAddrDto.getPostalCode());
         request.setShippingAddress(shippingAddress);
 
         Address billingAddress = new Address();
-        billingAddress.setContactName(dto.getCardHolderName());
-        billingAddress.setCity("Istanbul");
-        billingAddress.setCountry("Turkey");
-        billingAddress.setAddress("Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1");
-        billingAddress.setZipCode("34732");
+        billingAddress.setContactName(dto.getFirstName() + " " + dto.getLastName());
+        billingAddress.setCity(billAddrDto.getCity());
+        billingAddress.setCountry(billAddrDto.getCountry());
+        billingAddress.setAddress(billAddrDto.getStreet());
+        billingAddress.setZipCode(billAddrDto.getPostalCode());
         request.setBillingAddress(billingAddress);
 
         List<BasketItem> basketItems = new ArrayList<>();
@@ -160,14 +230,9 @@ public class PaymentService {
         firstBasketItem.setItemType(BasketItemType.PHYSICAL.name());
         firstBasketItem.setPrice(transaction.getAmount());
         
-        // Split revenue: 90% to seller, 10% stays with company
-        BigDecimal sellerRevenue = transaction.getAmount().multiply(new BigDecimal("0.90")).setScale(2, java.math.RoundingMode.HALF_UP);
-        firstBasketItem.setSubMerchantKey("dummy-sub-merchant-key");
-        firstBasketItem.setSubMerchantPrice(sellerRevenue);
-        
         basketItems.add(firstBasketItem);
         request.setBasketItems(basketItems);
 
-        return Payment.create(request, getOptions());
+        return com.iyzipay.model.Payment.create(request, getOptions());
     }
 }

@@ -59,6 +59,11 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   return response.text();
 }
 
+// User API
+export const updateProfile = (data: any) => fetchApi('/users/api/users/profile', { method: 'PUT', body: JSON.stringify(data) });
+export const getUserAddresses = () => fetchApi('/users/api/users/addresses', { method: 'GET' });
+export const addAddress = (data: any) => fetchApi('/users/api/users/addresses', { method: 'POST', body: JSON.stringify(data) });
+
 // User & Auth
 export const login = (data: any) => fetchApi('/users/api/auth/login', { method: 'POST', body: JSON.stringify(data) });
 export const register = (data: any) => fetchApi('/users/api/auth/register', { method: 'POST', body: JSON.stringify(data) });
@@ -66,18 +71,32 @@ export const registerSeller = (data: any) => fetchApi('/users/api/auth/register-
 export const getCurrentUser = () => fetchApi('/users/api/auth/me', { method: 'GET' });
 export const updateUser = (data: any) => fetchApi('/users/api/auth/me', { method: 'PUT', body: JSON.stringify(data) });
 export const logout = () => fetchApi('/users/api/auth/logout', { method: 'POST' });
+export const refreshToken = () => fetchApi('/users/api/auth/refresh', { method: 'POST' });
 
 // Products
 export const getProducts = () => fetchApi('/product/api/products', { method: 'GET' });
 export const getProductById = (id: string) => fetchApi(`/product/api/products/${id}`, { method: 'GET' });
 export const createProduct = (data: any) => fetchApi('/product/api/products', { method: 'POST', body: JSON.stringify(data) });
+export const searchProducts = (query: string) => fetchApi(`/product/api/products/search?q=${encodeURIComponent(query)}`, { method: 'GET' });
+
+// Categories
+export const getCategories = () => fetchApi('/product/api/categories', { method: 'GET' });
+export const createCategory = (data: any) => fetchApi('/product/api/categories', { method: 'POST', body: JSON.stringify(data) });
+export const deleteCategory = (id: number) => fetchApi(`/product/api/categories/${id}`, { method: 'DELETE' });
 
 // Orders
 export const createOrder = (data: any) => fetchApi('/order/api/orders', { method: 'POST', body: JSON.stringify(data) });
+export const getOrders = () => fetchApi('/order/api/orders', { method: 'GET' });
+export const getSellerOrders = () => fetchApi('/order/api/orders/seller', { method: 'GET' });
+export const updateOrderItemStatus = (itemId: string, status: string) => fetchApi(`/order/api/orders/items/${itemId}/status?status=${status}`, { method: 'PUT' });
+export const requestReturn = (itemId: string) => fetchApi(`/order/api/orders/items/${itemId}/return`, { method: 'PUT' });
+export const requestOrderRefund = (orderId: string) => fetchApi(`/order/api/orders/${orderId}/refund-request`, { method: 'POST' });
+export const approveOrderRefund = (orderId: string) => fetchApi(`/order/api/orders/${orderId}/refund-approve`, { method: 'POST' });
 
 // Cart
 export const getCart = (userId: string) => fetchApi(`/cart/api/cart/${userId}`, { method: 'GET' });
 export const addCartItem = (userId: string, data: any) => fetchApi(`/cart/api/cart/${userId}/items`, { method: 'POST', body: JSON.stringify(data) });
+export const updateCartItemQuantity = (userId: string, productId: string, quantity: number) => fetchApi(`/cart/api/cart/${userId}/items/${productId}?quantity=${quantity}`, { method: 'PUT' });
 export const removeCartItem = (userId: string, productId: string) => fetchApi(`/cart/api/cart/${userId}/items/${productId}`, { method: 'DELETE' });
 export const clearCart = (userId: string) => fetchApi(`/cart/api/cart/${userId}`, { method: 'DELETE' });
 

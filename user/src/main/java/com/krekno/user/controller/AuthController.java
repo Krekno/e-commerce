@@ -30,9 +30,9 @@ public class AuthController {
     }
 
     @PostMapping("/register-seller")
-    public ResponseEntity<Void> registerSeller(@Valid @RequestBody SellerSignupRequest request) {
-        authService.registerSeller(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> registerSeller(@Valid @RequestBody SellerSignupRequest request, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        HttpHeaders headers = authService.registerSeller(request, userDetails);
+        return ResponseEntity.ok().headers(headers).build();
     }
 
     @PostMapping("/login")

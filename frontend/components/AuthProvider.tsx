@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getCurrentUser } from '@/lib/api';
 
 type User = {
+  id: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -59,6 +60,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       setLoading(false);
     }
+
+    // Set up JWT refresh interval (every 13 minutes)
+    const REFRESH_INTERVAL = 13 * 60 * 1000;
+    const intervalId = setInterval(async () => {
+      const currentlyAuth = localStorage.getItem('isAuthenticated') === 'true';
+      if (currentlyAuth) {
+        try {
+          const { refreshToken } = await import('@/lib/api');
+          await refreshToken();
+        } catch (e) {
+          console.error('Failed to refresh token silently', e);
+        }
+      }
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // To prevent hydration mismatch, we can just return the provider immediately

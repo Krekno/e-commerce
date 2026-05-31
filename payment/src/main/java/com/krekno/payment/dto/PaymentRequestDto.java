@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class PaymentRequestDto {
-    private String cardHolderName;
+    private String firstName;
+    private String lastName;
     private String cardNumber;
     private String expireMonth;
     private String expireYear;

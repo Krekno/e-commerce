@@ -21,7 +21,7 @@ public class ProductService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final com.krekno.product.repository.ProductSearchRepository productSearchRepository;
 
-    public Product createProduct(ProductRequest request) {
+    public Product createProduct(String sellerEmail, ProductRequest request) {
         Category category = null;
         if (request.getCategoryId() != null) {
             category = categoryRepository.findById(request.getCategoryId())
@@ -34,6 +34,7 @@ public class ProductService {
                 .price(request.getPrice())
                 .stockQuantity(request.getStockQuantity())
                 .imageUrl(request.getImageUrl())
+                .sellerEmail(sellerEmail)
                 .category(category)
                 .build();
 

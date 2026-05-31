@@ -12,10 +12,10 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_URL:localhost:9092}
   mail:
-    host: ${SMTP_HOST:smtp.mailtrap.io}
-    port: ${SMTP_PORT:2525}
-    username: ${SMTP_USERNAME:dummy_user}
-    password: ${SMTP_PASSWORD:dummy_pass}
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:pazaruygulamasi@gmail.com}
+    password: ${SMTP_PASSWORD:verysecurepassword123}
     properties:
       mail:
         smtp:

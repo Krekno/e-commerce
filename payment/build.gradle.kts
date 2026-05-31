@@ -27,6 +27,8 @@ dependencyManagement {
 }
 
 dependencies {
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
     implementation("org.springframework.boot:spring-boot-starter")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
@@ -49,6 +51,7 @@ dependencies {
     // Kafka — consume OrderPlaced, publish PaymentSucceeded / PaymentFailed
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.springframework.cloud:spring-cloud-starter-config")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 }
 
 tasks.withType<Test> {

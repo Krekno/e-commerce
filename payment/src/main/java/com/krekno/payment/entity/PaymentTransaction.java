@@ -35,6 +35,15 @@ public class PaymentTransaction {
 
     private String iyzicoPaymentId;
 
+    @Column(name = "payment_transaction_id")
+    private String paymentTransactionId;
+
+    @Column(name = "shipping_address_id")
+    private UUID shippingAddressId;
+
+    @Column(name = "billing_address_id")
+    private UUID billingAddressId;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

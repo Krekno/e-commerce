@@ -20,9 +20,11 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.ok(productService.createProduct(request));
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<Product> createProduct(
+            @RequestHeader("X-User-Email") String sellerEmail,
+            @Valid @RequestBody ProductRequest request) {
+        return ResponseEntity.ok(productService.createProduct(sellerEmail, request));
     }
 
     @GetMapping
@@ -36,7 +38,6 @@ public class ProductController {
     }
 
     @PostMapping("/{id}/reduce-stock")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
     public ResponseEntity<Boolean> reduceStock(@PathVariable UUID id, @RequestParam int quantity) {
         boolean success = productService.reduceStock(id, quantity);
         if (success) {

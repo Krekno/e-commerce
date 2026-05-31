@@ -3,24 +3,10 @@ package com.krekno.user.dto;
 import jakarta.validation.constraints.NotBlank;
 
 public record SellerSignupRequest(
-        @NotBlank(message = "First name is required")
-        String firstName,
-        
-        @NotBlank(message = "Last name is required")
-        String lastName,
-        
-        @NotBlank(message = "Email is required")
-        String email,
-        
-        @NotBlank(message = "Password is required")
-        String password,
-        
         @NotBlank(message = "Store name is required")
         String storeName,
         
         String storeDescription,
-        
-        String profilePicture,
         
         @NotBlank(message = "Company type is required")
         String companyType,
@@ -35,5 +21,20 @@ public record SellerSignupRequest(
         String identityNumber,
         
         @NotBlank(message = "IBAN is required")
-        String iban
+        String iban,
+
+        @NotBlank(message = "Card holder name is required")
+        String cardHolderName,
+
+        @NotBlank(message = "Card number is required")
+        String cardNumber,
+
+        @NotBlank(message = "Expire month is required")
+        String expireMonth,
+
+        @NotBlank(message = "Expire year is required")
+        String expireYear,
+
+        @NotBlank(message = "CVC is required")
+        String cvc
 ) { }

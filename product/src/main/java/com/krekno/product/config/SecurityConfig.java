@@ -26,7 +26,10 @@ public class SecurityConfig {
             .cors(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
-                auth.anyRequest().authenticated() // The API Gateway acts as the first line of defense; we use @PreAuthorize for granular control
+                auth.requestMatchers("/error").permitAll()
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/*/reduce-stock").permitAll()
+                    .anyRequest().authenticated()
             );
 
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);

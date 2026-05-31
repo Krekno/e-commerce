@@ -36,4 +36,7 @@ public class ProductDocument {
 
     @Field(type = FieldType.Keyword)
     private String categoryName;
+
+    @Field(type = FieldType.Keyword)
+    private String sellerEmail;
 }

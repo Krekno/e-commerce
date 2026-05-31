@@ -16,4 +16,5 @@ public class CartItem {
     private UUID productId;
     private int quantity;
     private BigDecimal price;
+    private String sellerEmail;
 }

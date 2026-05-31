@@ -47,6 +47,12 @@ public class Order {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(nullable = false)
+    @Column(nullable = false, name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "shipping_address_id")
+    private UUID shippingAddressId;
+
+    @Column(name = "billing_address_id")
+    private UUID billingAddressId;
 }

@@ -26,7 +26,8 @@ public class SecurityConfig {
             .cors(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
-                auth.anyRequest().authenticated()
+                auth.requestMatchers("/error", "/api/payments/3ds-callback").permitAll()
+                    .anyRequest().authenticated()
             );
 
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);

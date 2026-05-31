@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { background-color: #ffffff; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: #27ae60; }
+        .icon { font-size: 50px; margin-bottom: 20px; }
+        .details { margin-top: 20px; font-size: 1.1em; color: #34495e; }
+        .footer { margin-top: 30px; font-size: 0.9em; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="icon">✅</div>
+    <h1>Payment Successful!</h1>
+    <p>Hi <span th:text="${email}">User</span>,</p>
+    <p>Your payment has been successfully processed.</p>
+    
+    <div class="details">
+        <p><strong>Order ID:</strong> <span th:text="${orderId}">123</span></p>
+    </div>
+    
+    <p>Your items will be shipped soon. You can track your order in your dashboard.</p>
+    
+    <div class="footer">
+        <p>Thank you for shopping with us!</p>
+        <p>&copy; 2026 Pazar E-commerce.</p>
+    </div>
+</div>
+</body>
+</html>
