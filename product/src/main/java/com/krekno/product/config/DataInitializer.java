@@ -67,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
                 Product product1 = Product.builder()
                         .name("MacBook Pro M3 Max")
                         .description("The ultimate pro laptop. M3 Max chip with 16-core CPU and 40-core GPU.")
-                        .price(new BigDecimal("120000.00"))
+                        .price(new BigDecimal("90000.00"))
                         .stockQuantity(15)
                         .imageUrl("https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/mbp16-spaceblack-select-202310?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1698153656788")
                         .sellerEmail("techstore@example.com")
