@@ -1,9 +1,10 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from './AuthProvider';
 import { useTheme } from './ThemeProvider';
-import { ShoppingCart, User, Moon, Sun, Store, Search } from 'lucide-react';
+import { ShoppingCart, User, Moon, Sun, Search } from 'lucide-react';
 import { useState } from 'react';
 import { logout } from '@/lib/api';
 import { useRouter } from 'next/navigation';
@@ -39,7 +40,7 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="container">
         <Link href="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Store size={28} />
+          <Image src="/logo.png" alt="Pazar Logo" width={28} height={28} style={{ objectFit: 'contain' }} priority />
           Pazar
         </Link>
         
