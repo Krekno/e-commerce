@@ -134,7 +134,29 @@ public class PaymentService {
             throw new RuntimeException("No Iyzico payment transaction ID found for this order");
         }
 
-        log.info("Processing refund via Iyzico for Order: {}, TxId: {}", transaction.getOrderId(), transaction.getPaymentTransactionId());
+        log.info("Processing cancellation/refund via Iyzico for Order: {}, PaymentId: {}", transaction.getOrderId(), transaction.getIyzicoPaymentId());
+
+        // Try Cancel first (works for same-day transactions before settlement)
+        com.iyzipay.request.CreateCancelRequest cancelReq = new com.iyzipay.request.CreateCancelRequest();
+        cancelReq.setLocale(Locale.TR.getValue());
+        cancelReq.setConversationId(transaction.getOrderId().toString() + "_CANCEL");
+        cancelReq.setPaymentId(transaction.getIyzicoPaymentId());
+        cancelReq.setIp("85.34.78.112");
+
+        com.iyzipay.model.Cancel cancel = com.iyzipay.model.Cancel.create(cancelReq, getOptions());
+
+        if ("success".equalsIgnoreCase(cancel.getStatus())) {
+            transaction.setStatus("REFUNDED");
+            paymentRepository.save(transaction);
+            
+            kafkaTemplate.send("payment-events", "REFUND_SUCCEEDED:" + orderId + ":" + transaction.getUserEmail());
+            
+            return PaymentResponseDto.builder()
+                    .status("success")
+                    .build();
+        }
+
+        log.info("Cancel failed ({}), falling back to Refund for Order: {}, TxId: {}", cancel.getErrorMessage(), transaction.getOrderId(), transaction.getPaymentTransactionId());
 
         com.iyzipay.request.CreateRefundRequest request = new com.iyzipay.request.CreateRefundRequest();
         request.setLocale(Locale.TR.getValue());
@@ -161,7 +183,7 @@ public class PaymentService {
             
             return PaymentResponseDto.builder()
                     .status("failure")
-                    .errorMessage(refund.getErrorMessage())
+                    .errorMessage("Cancel Error: " + cancel.getErrorMessage() + " | Refund Error: " + refund.getErrorMessage())
                     .build();
         }
     }
