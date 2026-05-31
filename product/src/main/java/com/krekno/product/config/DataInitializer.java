@@ -57,10 +57,10 @@ public class DataInitializer implements CommandLineRunner {
 
             System.out.println("Mock Categories initialized!");
         } else {
-            // Fetch first categories if they exist (hacky fallback for mock data)
-            electronics = categoryRepository.findAll().stream().findFirst().orElse(null);
-            laptops = electronics;
-            shirts = electronics;
+            // Fetch categories by name to prevent incorrect category mapping
+            electronics = categoryRepository.findAll().stream().filter(c -> "Electronics".equals(c.getName())).findFirst().orElse(null);
+            laptops = categoryRepository.findAll().stream().filter(c -> "Laptops".equals(c.getName())).findFirst().orElse(electronics);
+            shirts = categoryRepository.findAll().stream().filter(c -> "Shirts".equals(c.getName()) || "Clothing".equals(c.getName())).findFirst().orElse(electronics);
         }
 
         if (productRepository.count() == 0 && laptops != null) {
